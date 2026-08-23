@@ -62,6 +62,9 @@ func main() { // 入口函数，这个函数既没有参数，也没有返回值
 保存代码后在终端输入下面的运行命令即可查看 `Print` 函数打印的字符串。
 
 ```bash
+# 初始化 go.mod（执行一次即可）
+go mod init ModuleName
+# 编译并立即运行
 go run .
 ```
 
