@@ -6,7 +6,7 @@ AI 时代，做任何事情效率都在提高。你只需学会快速上手，�
 
 ## 目录
 
-- [Language Specification](docs/language-specification.md)
+- [Language Specification](docs/language-specification.md) —— 预计总学习时长为 3 小时
 - [Gin Web Framework](docs/gin-web-framework.md)
 
 # 致谢
