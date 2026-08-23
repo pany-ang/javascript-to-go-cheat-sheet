@@ -1,4 +1,4 @@
-# 00
+# 00（预计学习：1 分钟）
 
 ## 一句话介绍
 
@@ -10,7 +10,7 @@ Go 属于静态强类型，而 JS 属于完全相反的动态弱类型。
 
 Go 属于编译型语言，而 JS 属于解释型语言。
 
-# 01
+# 01（预计学习：10 分钟）
 
 ## 安装
 
@@ -41,7 +41,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 
 ![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/22a597d76199495389d69be01d7f3e92~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=sWCFQI5pR74j30CurrGZ6MpBC5g%3D)
 
-# 02
+# 02（预计学习：15 分钟）
 
 ## hello world
 
@@ -138,7 +138,7 @@ const    fallthrough  if      range        type
 continue for          import  return       var
 ```
 
-# 03
+# 03（预计学习：60 分钟）
 
 ## 定义变量
 
@@ -514,7 +514,7 @@ string  ""
 
 从图中可以看到 `int` 类型占用`4 byte`。但因为上图适用于 32 位架构，在 64 位架构中，`int` 类型就占用`8 byte` 了。如果想将内存占用固定下来，可以采用 `int32` 来定义变量。
 
-# 04
+# 04（预计学习：15 分钟）
 
 ## if
 
@@ -626,7 +626,7 @@ default:
 
 与 JS 相比，Go 语言的 switch 语句每个 case 最后默认带有 `break` 关键字，也就是说匹配到某一个 case 以后不会向下执行后面的 case。相反，如果你想要强制执行后面的语句，你需要显式地使用 `fallthrough` 关键字。
 
-# 05
+# 05（预计学习：30 分钟）
 
 ## 函数
 
@@ -786,7 +786,7 @@ func main() {
 
 ![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/cad1cadbcaac4d46a63225911a3cbd91~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=L%2F3lXJu3nnsjSjemV%2FWQ14t21NM%3D)
 
-# 06
+# 06（预计学习：45 分钟）
 
 ## 结构体类型
 
@@ -1033,7 +1033,7 @@ fmt.Println(x)
 
 当然，关于反射这一知识，这里的介绍有限。如果你感兴趣，你可以尝试让 AI 给你列举一些反射在实践中的案例。
 
-# 07
+# 07（预计学习：5 分钟）
 
 ## 协程
 
