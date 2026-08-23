@@ -10,6 +10,8 @@ Go 属于静态强类型，而 JS 属于完全相反的动态弱类型。
 
 Go 属于编译型语言，而 JS 属于解释型语言。
 
+> **JS 类比**：Go 的类型检查发生在编译期，手感像给项目常开 `tsc --strict`。但 TS 的类型编译后会被擦除，Go 的类型在运行时是真实存在的（后面的反射一节会用到这一点）。
+
 # 01（预计学习：10 分钟）
 
 ## 安装
@@ -28,6 +30,8 @@ export GOPROXY=https://goproxy.io,direct
 ```
 
 Windows 环境或私有模块设置代理请继续参考 [goproxy.io](https://goproxy.io) 网站教程。
+
+> **JS 类比**：`GOPROXY` 就是 `npm config set registry` 换的那个镜像源。
 
 如果需要全局生效，则执行命令（以 macOS 为例）：
 
@@ -58,6 +62,8 @@ func main() { // 入口函数，这个函数既没有参数，也没有返回值
 ```
 
 包名 `main` 则表示它是一个可独立运行的包，它在编译后会产生可执行文件。除了 `main` 包之外，其它的包会生成包文件存放在构建缓存中。
+
+> **JS 类比**：JS 没有入口函数这个概念，入口文件的顶层代码直接就跑起来了，Go 则必须把起点写成 `main` 包里的 `func main()`。另外 `fmt.Print` 对应 `process.stdout.write`，而后面常见的 `fmt.Println` 才对应 `console.log`（自动换行）。
 
 保存代码后在终端输入下面的运行命令即可查看 `Print` 函数打印的字符串。
 
@@ -118,11 +124,32 @@ go env
 go list
 ```
 
+先用一张对照表建立肌肉记忆：
+
+| Go | npm / 前端工具链 |
+| --- | --- |
+| `go.mod` / `go.sum` | `package.json` / `package-lock.json` |
+| `go mod init` | `npm init` |
+| `go mod tidy` | `npm install` + `npm prune`（按源码里实际的 import 增删依赖） |
+| `go mod download` | `npm ci`（只预取到全局模块缓存，没有 `node_modules`） |
+| `go get pkg@v1.2.3` | `npm i pkg@1.2.3` |
+| `go mod vendor` | 把依赖复制到项目内的 `vendor/`（类似把 `node_modules` 放进项目） |
+| `go install pkg@latest` | `npm i -g pkg` |
+| `go build` | `npm run build` / `vite build` |
+| `go run .` | `npx tsx index.ts` |
+| `go fmt` | Prettier（内置，且几乎没有配置项可吵） |
+| `go vet` | ESLint（只查正确性，不管格式） |
+| `go test` | Jest / Vitest（内置，测试文件叫 `xxx_test.go`） |
+
+另有两处差异需要提前知道：Go 没有 `node_modules`，依赖统一缓存在 `$GOPATH/pkg/mod` 里供所有项目共用；Go 也没有 `scripts` 字段，需要串一串命令时大家一般写 `Makefile`。
+
 ## 导入导出
 
 首字母大写的变量、函数、类型是导出的，其它包可以访问；首字母小写的不导出，只能在当前包内使用。
 
 类比前端的 `ES Module`：大写开头相当于 `export function Parse() {}`，小写开头相当于只写 `function parse() {}` 没有 `export`。区别在于 Go 的边界是包（一个目录），不是单个文件；同一个包里的不同文件之间，小写的东西可以直接互相调用，不需要 `export`，也不需要 `import`。
+
+> **JS 类比**：Go 的导入永远是整个包的命名空间，`import "fmt"` 相当于 `import * as fmt from "fmt"`，用的时候必须写 `fmt.Println`。没有 default export，也不能只挑一个函数导入；想换个名字用就写 `import f "fmt"`，相当于 `as f`。还有一条会让人措手不及：导入了却没使用，Go 直接编译不通过，而这在 JS 里只是 ESLint 的一个 warning。
 
 **先记住以上内容即可。**
 
@@ -154,11 +181,15 @@ var age int = 28
 age := 28
 ```
 
+> **JS 类比**：`var` 对应的是 `let`（同样是块级作用域，Go 不存在 JS `var` 那种变量提升），`:=` 是它的省略写法，但只能写在函数内部，包级别只能用 `var`。另外声明了却没使用的局部变量会直接编译报错，同样不像 JS 只给一个 warning。
+
 特殊字符下划线 `_`，任何赋予它的值都会被丢弃，下面表达式丢弃了 59，将 60 赋值给了变量 score。
 
 ```go
 _, score := 59, 60
 ```
+
+> **JS 类比**：`_` 相当于解构里的空位，`_, score := 59, 60` 就是 `const [, score] = [59, 60]`。
 
 ## 定义常量
 
@@ -167,6 +198,8 @@ _, score := 59, 60
 ```go
 const Pi float32 = 3.14
 ```
+
+> **JS 类比**：只有关键字一样。JS 的 `const` 锁的是绑定，所以 `const arr = []` 之后照样能 `arr.push()`；Go 的 `const` 只能用编译期可求值的常量表达式（数字、字符串、布尔等），写 `const n = 1 + 2` 是合法的，而 `const s = []int{}` 会直接编译不通过。
 
 ## 分组声明
 
@@ -222,6 +255,8 @@ var isActive bool = true
 
 两种，有 `float32` 和 `float64` 类型，没有 `float` 类型，默认是`float64`。
 
+> **JS 类比**：JS 只有一个 `number`（IEEE 754 双精度），最接近 Go 的 `float64`；JS 的 `BigInt` 在 Go 里对应标准库的 `math/big`。Go 把整数拆成了一排宽度确定的类型，而且不同类型之间连相加都不允许，必须显式转换成同一种：`int64(a) + b`。
+
 #### 复数
 
 默认是 `complex128` 类型，也可指明 `complex64`。
@@ -242,6 +277,8 @@ str2 := `hello
     world`
 ```
 
+> **JS 类比**：反引号相当于模板字符串的多行能力，但**不能插值**，Go 里没有 `${}`，拼字符串要用 `fmt.Sprintf("hello %s", name)`。
+
 字符串是不可变的，如果想修改它的话，可以这样：
 
 ```go
@@ -251,6 +288,8 @@ b[0] = '4'
 str2 := string(b)  // 转换回 string 类型
 fmt.Printf("%s\n", str2)
 ```
+
+> **JS 类比**：区别在下标上 —— Go 的 `str1[0]` 取到的是一个 `byte`（数字 `49`），而不是 `"1"` 这种单字符字符串。
 
 字符串可以相连：
 
@@ -267,6 +306,8 @@ s := "123456"
 s = s[1:]
 ```
 
+> **JS 类比**：`s[1:]` 就是 `s.slice(1)`。但 Go 按**字节**切、JS 按 UTF-16 码元切，所以 `len("中文")` 是 6 而 `"中文".length` 是 2，直接切中文很容易切出乱码 —— 要按字符处理得先转成 `[]rune`。
+
 ### 错误类型
 
 内置有一个 `error` 类型和 `errors` 包。
@@ -278,6 +319,8 @@ if err != nil {
 }
 ```
 
+> **JS 类比**：`errors.New("发生错误")` 对应 `new Error('发生错误')`，但 Go 的 error 只是一个普通返回值，不会被 throw，也不自带调用栈。函数返回 `(值, error)` 再 `if err != nil` 的写法，很像 JS 社区里 `const [err, data] = await to(promise)` 那一派。
+
 ## iota 定义枚举值
 
 `iota` 是一个预定义标识符，它只在常量声明中具有特殊功能：
@@ -286,6 +329,8 @@ if err != nil {
 - 自动递增：在同一个 `const` 块中，每新增一行，`iota` 的值就会自动加 1。
 - 重置机制：每次遇到一个新的 `const` 关键字时，`iota` 就会被重置为 0。
 - 使用场景：常用于配合 `const` 定义一组连续的枚举值。
+
+> **JS 类比**：最接近 TS 的 `enum { X, Y, Z }` 自动从 0 递增。JS 本身没有对应写法，通常只能手写一串常量。
 
 ```go
 package main
@@ -352,6 +397,8 @@ easyArray := [2][4]int{{1, 2, 3, 4}, {5, 6, 7, 8}}
 
 **数组之间的赋值是值的赋值**，即当把一个数组作为参数传入函数的时候，传入的其实是该数组的副本，而不是它的指针。
 
+> **JS 类比**：这条恰好和 JS 相反 —— JS 里把数组传进函数，函数内部改元素外面看得见；Go 的 array 传进去的是拷贝，改不到原数组。
+
 ## slice 类型
 
 在定义数组时，如果我们并不知道需要多少长度，就需要用到 `slice`，叫做动态数组或切片。
@@ -362,6 +409,8 @@ easyArray := [2][4]int{{1, 2, 3, 4}, {5, 6, 7, 8}}
 slice := []byte{'a', 'b', 'c', 'd'}
 ```
 
+> **JS 类比**：`slice` 才是 JS `Array` 的对应物。`len(s)` 是 `s.length`，`append(s, x)` 粗略对应 `s.push(x)`、`append(s, other...)` 粗略对应 `s.push(...other)`（只是粗略，差别见后文）。`cap` 则是 JS 里没有的概念。
+
 切片操作，既可以切数组也可以切 Slice 本身：
 
 ```go
@@ -369,6 +418,8 @@ Array_a := [10]byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'}
 Slice_a := Array_a[2:5] // Slice_a 包含 Array_a[2]、Array_a[3]、Array_a[4]
 Slice_b := Slice_a[0:8] // 对 slice 进行切片可以在 cap 范围内扩展
 ```
+
+> **JS 类比**：这里是最容易翻车的地方。`Array_a[2:5]` 不等于 `arr.slice(2, 5)`：JS 的 `slice` 给你一份拷贝，Go 的切片表达式给你的是同一块底层数组上的**视图**，改视图会改到原数组。另外 Go 不支持负数下标，`s[-1]` 是编译错误，取最后一个元素得写 `s[len(s)-1]`。
 
 切片操作对应的存储结构如下图所示：
 
@@ -391,6 +442,8 @@ arr := [3]string{"a", "b", "c"}
 slice := append(append(arr[:1], "x", "y", "z"), arr[1:]...)
 fmt.Println(slice) // [a x y z b c]
 ```
+
+> **JS 类比**：`append` 不是 `push`，它不保证原地修改，返回值必须接住 —— 永远写成 `s = append(s, x)`。展开语法的位置也换了个边：JS 写 `s.push(...other)`，Go 写在后面 `append(s, other...)`。
 
 但是有一个很细节的地方需要记住：`append` 函数会改变 `slice` 所引用的数组的内容，从而影响到引用同一数组的其它 `slice`。但当 `slice` 中没有剩余空间（即`(cap-len) == 0`）时，此时将动态分配新的数组空间。返回的 `slice` 数组指针将指向这个空间，而原数组的内容将保持不变，其它引用此数组的 `slice` 则不受影响：
 
@@ -422,6 +475,8 @@ fmt.Println(num, slice2, slice1)  // 1 [a y z] [a]
 
 Map 也可以叫做字典，是无序的，是一种**引用类型**。并且在使用时，有一条铁律需要记住：内置的 Map 数据结构在多个协程 `goroutine` 同时读写时，不会自动保护数据。如果不加锁，程序可能会直接崩溃。你必须使用互斥锁 `sync.Mutex` 来排队访问。
 
+> **JS 类比**：JS 是单线程，你从来不需要给 `Map` 加锁 —— 这是转 Go 之后新增的心智负担。
+
 声明、初始化以及常见使用方式：
 
 ```go
@@ -440,6 +495,8 @@ fmt.Println(value, ok)
 delete(map1, "three")
 ```
 
+> **JS 类比**：它对应的是 `Map` 而不是普通对象：key 有固定类型，`len(m)` 是 `m.size`，`delete(m, k)` 是 `m.delete(k)`，`v, ok := m[k]` 一次就把 `m.get(k)` 和 `m.has(k)` 都干了。两处不同要记牢：取一个不存在的 key 会拿到该类型的**零值**而不是 `undefined`；`range` 遍历顺序未规定，不能依赖，而 JS 的 `Map` 保证插入顺序。
+
 当然，可以继续使用简化写法：
 
 ```go
@@ -456,6 +513,8 @@ var map1 map[string]int
 map1 = make(map[string]int)
 map1["three"] = 3
 ```
+
+> **JS 类比**：`var map1 map[string]int` 只是声明了类型，还没有 `new Map()`，此时它是 `nil`，写入会直接 panic（读却是安全的，返回零值）。JS 里没有这种半初始化状态。
 
 和 JS 中的引用类型相似，两个变量指向同一个地方，改变其中一个，另一个也会相应的改变：
 
@@ -487,9 +546,13 @@ type months map[string]int
 type age = int
 ```
 
+> **JS 类比**：`type age = int` 就是 TS 的 `type Age = number`，纯别名，两者可以互换。而上一节不带 `=` 的 `type age int` 是一个**全新的类型**，它和 `int` 不能直接互相赋值 —— TS 里想模拟这种效果得靠 branded type 之类的技巧。
+
 ## new、make
 
 先记住即可：`new` 操作返回指针、`make` 操作返回初始化后的（非零）值。
+
+> **JS 类比**：注意这个 `new` 和 JS 的 `new` 不是一回事，Go 的 `new` 只是申请一块零值内存并返回指针，没有构造函数也没有原型。倒是 `make` 承担了初始化的角色，`make(map[string]int)` 的位置大致相当于 `new Map()`。
 
 ## 零值
 
@@ -505,6 +568,8 @@ bool    false
 string  ""
 引用类型 nil
 ```
+
+> **JS 类比**：Go 没有 `undefined`，也没有"声明了但还没有值"的状态，变量一出生就是零值。`nil` 大致对应 `null`，但只有指针、slice、map、chan、func、interface 这几类能是 `nil`，`int` 就是 `0`、`string` 就是 `""`，永远不会是 `nil`。
 
 ## 内存分配
 
@@ -529,6 +594,8 @@ if score >= 60 {
 }
 ```
 
+> **JS 类比**：条件必须是**布尔值**，Go 没有真值/假值转换。`if (str)` 得写成 `if str != ""`，`if (arr.length)` 得写成 `if len(arr) > 0`。顺带一串 JS 常用写法在 Go 里都不存在：三元 `a ? b : c`、`a || 默认值`、`a ?? b`、`a?.b`，全都得老实写成 `if`。
+
 并且 Go 的 `if` 语句中的条件判断语句是可以声明一个变量的，作用域只在当前 `if` 语句块中：
 
 ```go
@@ -541,6 +608,8 @@ if score := computedValue(); score >= 60 {
 // 这里会编译出错，因为 score 是 if 块的变量
 fmt.Println(score)
 ```
+
+> **JS 类比**：在 `if` 条件里**声明**一个只在这个 `if` 内可见的变量，JS 做不到（JS 只能把赋值写进条件，变量本身还得在外面先声明）。这种写法在 Go 里极其常见，因为错误处理天天要写 `if err := doSomething(); err != nil {}`。
 
 ## goto
 
@@ -557,6 +626,8 @@ Here: // 以冒号结束作为标签
 ```
 
 并且只能在当前函数内部使用。
+
+> **JS 类比**：JS 没有 `goto`，但有效果类似的标签 —— Go 同样支持 `break outer`、`continue outer` 这种带标签的跳转，想跳出多层循环用它就够了，别碰 `goto`。
 
 ## for
 
@@ -577,6 +648,8 @@ for sum < 10 {
     sum += sum
 }
 ```
+
+> **JS 类比**：Go 只有 `for` 一个循环关键字，`while` 和 `do...while` 都不存在，`for {}` 就是 `while (true)`。
 
 可以结束循环，依靠 `break` 和 `continue` 这两个关键字。`break` 是跳出整个循环，`continue` 是跳过本次循环。
 
@@ -601,6 +674,10 @@ for k, v := range map1 {
 }
 ```
 
+> **JS 类比**：`for i, v := range slice` 对应 `for (const [i, v] of arr.entries())`，`for k, v := range map1` 对应 `for (const [k, v] of map1)`。只要下标就写 `for i := range slice`，只要值就写 `for _, v := range slice`。
+>
+> 两点要注意：Go 的 slice 没有 `map`、`filter`、`reduce`、`forEach` 这些方法，遍历基本都落回 `for range`；而且 `v` 是元素的**拷贝**，`for _, v := range list { v.name = "x" }` 改不到原元素，要改就用下标 `list[i].name = "x"`。
+
 ## switch
 
 `switch` 语句常用来代替冗长的 `if-else` 语句。
@@ -610,7 +687,7 @@ i := 3
 switch i {
 case 0:
 	fmt.Println("i == 0")
-case 1, 2:
+case 1, 2: // 相当于 JS 里连着写两个 case 标签
 	fmt.Println("i == 1 or 2")
 case 3:
 	fmt.Println("i == 3")
@@ -648,6 +725,8 @@ func main() {
 
 > 这种命名返回值的函数声明方式对生成的文档可读性更好
 
+> **JS 类比**：多值返回相当于 JS 里返回一个数组再解构，`a, b := FuncName(1, 2)` 就是 `const [a, b] = FuncName(1, 2)`，只是 Go 这是语言级特性，不用真造一个数组出来。命名返回值和裸 `return` 则是 Go 独有的，JS 没有对应写法。
+
 也有办法写的像 JS 一些：
 
 ```go
@@ -666,6 +745,8 @@ func main() {
 
 > 前文导入导出篇有提到：函数名 `FuncName` 是大写字母开头表示是导出的，表示其它包可以访问，否则可以改为小写字母开头。
 
+> **JS 类比**：几个 JS 习惯要提前戒掉 —— Go 的函数没有默认参数、没有可选参数、没有重载、没有 `arguments`，也没有箭头函数（匿名函数一律写全 `func(x int) int { ... }`）。
+
 ## 变参
 
 接受变参的函数是有着不定数量的参数的，这就是和 JS 的剩余参数类似。
@@ -675,6 +756,8 @@ func FuncName(input1 int, arg ...int) {}
 ```
 
 `arg ...int` 就表示这个函数接受不定数量的参数，这些参数全部是 `int` 类型，最终存放到变量 `arg` 中，它是一个 `slice` 类型。
+
+> **JS 类比**：`func f(arg ...int)` 就是 `function f(...arg)`。反过来，调用时想把一个已有的 slice 展开传进去写作 `f(1, s...)`，对应 JS 的 `f(1, ...s)`。
 
 ## 传指针
 
@@ -700,6 +783,8 @@ func main() {
 先学习语法：获取变量 `x1` 的指针（地址）的语法是 `&x1`，将函数的形参改为指针类型的语法是 `*int`（用于接收传递进来的地址），如果想通过指针访问真实的值，则用语法 `*x`。
 
 这段程序将整数 `x1` 的指针传递给 `add` 函数，函数形参由于接收的是指针而不是往常的值，所以对形参的修改操作都是直接作用于 `x1` 上的。这一点上和 JS 中的引用传递效果非常类似。
+
+> **JS 类比**：JS 里 `function f(o) { o.x = 1 }` 能改到外部对象，是因为传进去的是引用的副本。Go 里 struct 是值类型，想要同样的效果，形参必须写成 `*Person`、调用写 `f(&p)`。而 slice 和 map 虽然也是值传递，但它们内部含指针，在函数里**改已有元素**（`s[0] = x`、`m[k] = v`）一样会影响调用方。但 slice 仅止于此：函数内 `append` 追加的元素调用方看不到（长度也是拷贝的），而 JS 里 `arr.push()` 外面是看得到的。
 
 ## defer
 
@@ -741,6 +826,8 @@ func readFile(filename string) error {
 }
 ```
 
+> **JS 类比**：`defer file.Close()` 承担的是 `try { ... } finally { file.close() }` 里 `finally` 的职责，只是清理代码写在了打开资源的**旁边**，不用把整段逻辑缩进到 `try` 里。TS 5.2 的 `using` 声明思路更接近它。
+
 ## 函数类型
 
 比如上面函数 `func readFile(filename string) error {}` 如果要声明一个与之对应的类型，那么就使用 `type` 关键字：
@@ -754,6 +841,8 @@ type readFileType func(string) error
 在 Go 语言中没有像 JS 那样的异常机制，所以不能抛出异常。需要用 `panic` 主动抛出运行时恐慌，再用 `recover` 拦截并恢复处于这种恐慌状态的协程。需配合延迟调用函数 `defer` 使用。
 
 但请记住，Go 语言更推荐使用传统的 `error` 返回值（多值返回）来处理错误。所以不到万不得已请别使用 `panic、recover`。
+
+> **JS 类比**：先记成 `panic` ≈ `throw`、`recover` ≈ `catch`、`defer` ≈ `finally` 就够用了，但有两点不同：`recover` 只能写在 `defer` 的函数里，不能像 `catch` 那样随手包住一段代码；没有被 recover 的 panic 会让整个进程退出，和 Node 里未捕获的异常一样。另外要留意下标越界 —— JS 的 `arr[100]` 只是给你 `undefined`，Go 里直接 panic。
 
 ```go
 var user = os.Getenv("USER")
@@ -784,6 +873,8 @@ func main() {
 
 如图所示，简单来说就是作为入口的 `main` 包反而是最后被加载完毕的。
 
+> **JS 类比**：包级变量的初始化和 `init()` 函数，位置相当于 ES Module 里的顶层语句 —— 被导入时执行，而且无论被多少个包导入都只执行一次，和 ESM 的模块缓存一样。
+
 ![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/cad1cadbcaac4d46a63225911a3cbd91~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=L%2F3lXJu3nnsjSjemV%2FWQ14t21NM%3D)
 
 # 06（预计学习：45 分钟）
@@ -810,6 +901,8 @@ func main() {
     fmt.Printf("name is %s and age is %d\n", p3.name, p3.age)
 }
 ```
+
+> **JS 类比**：`person{name: "pany2", age: 29}` 看着就是对象字面量，但字段是**写死**在类型里的：不能动态加字段、没有 `delete`，写 `p.nickname = "x"` 直接编译报错。更要紧的是 struct 是值类型，`p2 := p1` 会把整个结构体拷一份，改 `p2` 不会动到 `p1` —— JS 里对象赋值是共享同一个引用，这是转 Go 最容易踩的坑之一。至于第三种按位置初始化的写法 `person{"pany3", 30}`，JS 里没有对应。
 
 ### 嵌入字段
 
@@ -838,6 +931,8 @@ func main() {
 	fmt.Println("name is", mark.Human.name) // 输出 name is pany3
 }
 ```
+
+> **JS 类比**：字段提升发生在编译期，不是原型链 —— 没有动态查找，也没有 `super`。`mark.age` 能直接读到 `Human` 里的字段，而被同名遮蔽的那个要写全 `mark.Human.name`。
 
 ## 结构体方法
 
@@ -890,6 +985,12 @@ func main() {
 }
 ```
 
+> **JS 类比**：接收者 `r` 就是被显式写出来的 `this`。因为它只是一个具名参数，Go 里不存在 `this` 指向丢失的问题，也就不需要 `bind`、不需要为了保住 `this` 而套一层箭头函数。
+>
+> 另外 JS 里对象方法天生就能改到自身属性（对象本来就是引用），Go 里想改到原结构体，接收者必须写成指针 `func (c *Circle)`，值接收者拿到的只是一份拷贝。
+>
+> 最后，Go 没有 `class` 也没有 `constructor`。需要构造函数时，社区约定是写一个返回该类型的普通函数，比如 `func NewPerson(name string) *person`，调用处的 `NewPerson("pany")` 就相当于 `new Person("pany")`。
+
 ## interface
 
 ### 定义
@@ -933,6 +1034,8 @@ func main() {
 
 通过上面的代码可以知道，`interface` 类型的变量可以接收实现了这个 `interface` 的任意类型的结构体。例如属于 `Speaker` 接口的参数 `s` 就能接受 `Cat` 和 `Dog` 类型的结构体。
 
+> **JS 类比**：和 TS 的 `interface` 是同一个思路 —— **结构化类型**，形状对上就算实现，不需要写 `implements`。上面的 `Cat` 里没有任何一处提到 `Speaker`，光是有了 `Speak() string` 方法就自动满足它。区别是 Go 的 interface 只能约束方法，不能像 TS 那样描述字段。
+
 ### 空接口
 
 既然 `interface` 类型的变量可以接收实现了这个 `interface` 的任意类型的结构体，那么不包含任何 `method` 的空接口就相当于被所有类型都实现了，所以任意类型的值都能赋值给空接口类型的变量。
@@ -961,6 +1064,8 @@ func main() {
 }
 ```
 
+> **JS 类比**：更准确的对应是 TS 的 `unknown` 而不是 `any`。`any` 拿到手就能随便用，而 Go 的空接口在用之前必须先断言出具体类型（正好是下面要讲的）。
+
 ### 嵌入接口
 
 和前面结构体章节提到的**嵌入字段**类似，也是一种组合方式。就是允许在一个接口中直接写入另一个接口的名字。这样，新的接口就会拥有被嵌入接口的所有方法，用来实现代码复用和功能扩展。
@@ -981,6 +1086,8 @@ type ReadWriter interface {
 }
 ```
 
+> **JS 类比**：就是 TS 的 `interface ReadWriter extends Reader, Writer`。
+
 ### 断言
 
 格式 `value, ok := x.(T)`，`x` 表示接口类型的变量，`T` 表示你想猜测的类型，`value` 表示转换成功后的变量值，`ok` 是布尔值，表示成功或失败。
@@ -996,6 +1103,8 @@ if ok {
 	fmt.Println("断言失败")
 }
 ```
+
+> **JS 类比**：写法像 TS 的 `x as T`，但性质完全不同。TS 的 `as` 只是编译期给你打个包票，运行时什么都不做；Go 的断言是真的在运行时检查，失败会给你 `ok == false`（不接收 `ok` 而直接断言失败则会 panic）。行为上更接近 `instanceof` 判断加类型收窄。
 
 ### 反射
 
@@ -1017,6 +1126,8 @@ func main() {
 	fmt.Println("kind is float64:", v.Kind() == reflect.Float64) // kind is float64: true
 }
 ```
+
+> **JS 类比**：JS 里 `typeof`、`instanceof`、`Object.keys` 随手就能用，因为值天生带着运行时信息；而 TS 的类型编译后会被擦除，想在运行时校验只能自己写 schema（比如 zod）。Go 是静态类型但**保留**了运行时类型信息，`reflect` 就是取用它的入口 —— 这也是 struct tag 能驱动 JSON 解析和 ORM 映射的原因。
 
 上面 `reflect.TypeOf(x)` 传入的变量 `x` 并不是空接口类型而是 `float64` 类型，但是没有报错是因为做了一次隐式的类型转换。或者可以用前面**空接口章节**的知识来解释：“空接口就相当于被所有类型都实现了，所以任意类型的值都能赋值给空接口类型的变量”。
 
@@ -1063,6 +1174,10 @@ func main() {
 // ...
 ```
 
+> **JS 类比**：JS 是单线程加事件循环，并发靠 `Promise` 和 `async/await` 把等待的时间让出去；Go 是直接开协程，可以真的跑在多个 CPU 核上。`go say("world")` 相当于调用一个 async 函数却不 `await` 它，区别是你连一个 `Promise` 都拿不到 —— 想等它结束、想取它的结果，得靠 channel 或 `sync.WaitGroup`。代码里的 `runtime.Gosched()` 是主动让出执行权，手感类似写一句 `await new Promise(r => setTimeout(r, 0))`，实际业务中几乎不需要手写，调度器会自己抢占。
+
 上面的多个协程运行在同一个进程里面，共享内存数据，不过设计上我们要遵循：不要通过共享来通信，而要通过通信来共享。
 
 还需要知道的是，主协程退出即程序终止，也就是说字符串 `hello` 能被稳定地打印出 5 行，但是字符串 `world` 就不一定了，不信你就将程序运行试一下~
+
+> **JS 类比**：这一条要特别小心。Node 会等到事件循环里没有任务了才退出进程，所以 `setTimeout` 里的回调总能执行；而 Go 的 `main` 一返回，其他协程不管跑到哪都会被直接掐断。
