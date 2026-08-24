@@ -43,7 +43,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 
 与前端开发一样，采用 [Visual Studio Code](https://code.visualstudio.com/) 代码编辑器即可，只需记得安装 [golang.go](https://open-vsx.org/vscode/item?itemName=golang.Go) 插件。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/22a597d76199495389d69be01d7f3e92~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=sWCFQI5pR74j30CurrGZ6MpBC5g%3D)
+![image.png](../images/go.webp)
 
 # 02（预计学习：15 分钟）
 
@@ -423,7 +423,7 @@ Slice_b := Slice_a[0:8] // 对 slice 进行切片可以在 cap 范围内扩展
 
 切片操作对应的存储结构如下图所示：
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/e75192d2b61a4d1a88221010a88714ef~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=2bzINSg2ikHseENlZlBdTi%2F2sD4%3D)
+![image.png](../images/slice.webp)
 
 概念上 `slice` 像一个结构体，这个结构体包含了三个元素：
 
@@ -575,7 +575,7 @@ string  ""
 
 简单了解一下基础数据类型在底层是如何分配内存空间的。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/f8e81a6eebeb42f88a778973257c9316~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=Q%2BLs29ov28cK4I7eSbq36i9MvdQ%3D)
+![image.png](../images/byte.webp)
 
 从图中可以看到 `int` 类型占用`4 byte`。但因为上图适用于 32 位架构，在 64 位架构中，`int` 类型就占用`8 byte` 了。如果想将内存占用固定下来，可以采用 `int32` 来定义变量。
 
@@ -875,7 +875,7 @@ func main() {
 
 > **JS 类比**：包级变量的初始化和 `init()` 函数，位置相当于 ES Module 里的顶层语句 —— 被导入时执行，而且无论被多少个包导入都只执行一次，和 ESM 的模块缓存一样。
 
-![image.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/cad1cadbcaac4d46a63225911a3cbd91~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgcGFueQ==:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMjA0MTEyMDMwNDE0ODg0NSJ9&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1787921382&x-orig-sign=L%2F3lXJu3nnsjSjemV%2FWQ14t21NM%3D)
+![image.png](../images/package.webp)
 
 # 06（预计学习：45 分钟）
 
