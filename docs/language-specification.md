@@ -20,7 +20,7 @@ Go 属于编译型语言，而 JS 属于解释型语言。
 
 有好几种安装方式，一般选择标准包安装方式即可：访问官方[下载地址](https://go.dev/dl/)，选择适应的系统和适用的版本。下载后双击安装包，一直点击下一步即可，非常简单。
 
-*文章编写时，作者所安装的 Go 版本为最新的 `1.26.5`*
+_文章编写时，作者所安装的 Go 版本为最新的 `1.26.5`_
 
 ## 设置代理
 
@@ -128,20 +128,20 @@ go list
 
 先用一张对照表建立肌肉记忆：
 
-| Go | npm / 前端工具链 |
-| --- | --- |
-| `go.mod` / `go.sum` | `package.json` / `package-lock.json` |
-| `go mod init` | `npm init` |
-| `go mod tidy` | `npm install` + `npm prune`（按源码里实际的 import 增删依赖） |
-| `go mod download` | `npm ci`（只预取到全局模块缓存，没有 `node_modules`） |
-| `go get pkg@v1.2.3` | `npm i pkg@1.2.3` |
-| `go mod vendor` | 把依赖复制到项目内的 `vendor/`（类似把 `node_modules` 放进项目） |
-| `go install pkg@latest` | `npm i -g pkg` |
-| `go build` | `npm run build` / `vite build` |
-| `go run .` | `npx tsx index.ts` |
-| `go fmt` | Prettier（内置，且几乎没有配置项可吵） |
-| `go vet` | ESLint（只查正确性，不管格式） |
-| `go test` | Jest / Vitest（内置，测试文件叫 `xxx_test.go`） |
+| Go                      | npm / 前端工具链                                                 |
+| ----------------------- | ---------------------------------------------------------------- |
+| `go.mod` / `go.sum`     | `package.json` / `package-lock.json`                             |
+| `go mod init`           | `npm init`                                                       |
+| `go mod tidy`           | `npm install` + `npm prune`（按源码里实际的 import 增删依赖）    |
+| `go mod download`       | `npm ci`（只预取到全局模块缓存，没有 `node_modules`）            |
+| `go get pkg@v1.2.3`     | `npm i pkg@1.2.3`                                                |
+| `go mod vendor`         | 把依赖复制到项目内的 `vendor/`（类似把 `node_modules` 放进项目） |
+| `go install pkg@latest` | `npm i -g pkg`                                                   |
+| `go build`              | `npm run build` / `vite build`                                   |
+| `go run .`              | `npx tsx index.ts`                                               |
+| `go fmt`                | Prettier（内置，且几乎没有配置项可吵）                           |
+| `go vet`                | ESLint（只查正确性，不管格式）                                   |
+| `go test`               | Jest / Vitest（内置，测试文件叫 `xxx_test.go`）                  |
 
 另有两处差异需要提前知道：Go 没有 `node_modules`，依赖统一缓存在 `$GOPATH/pkg/mod` 里供所有项目共用；Go 也没有 `scripts` 字段，需要串一串命令时大家一般写 `Makefile`。
 
