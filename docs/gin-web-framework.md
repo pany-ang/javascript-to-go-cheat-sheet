@@ -288,7 +288,7 @@ Gin 接收文件需要用到前面 **Form 参数**章节提到的 `multipart/for
 
 > 注意，不要信任前端上传的文件名 `file.Filename`。在文件系统操作中使用之前，请始终对其进行清理或替换。使用 `filepath.Base` 去除目录组件以防止路径遍历攻击。
 
-### 单文件
+## 接收单文件
 
 先看一个处理单文件的示例：
 
@@ -346,7 +346,7 @@ func main() {
 curl -X POST http://localhost:8080/upload -F "file=@filepath" -H "Content-Type: multipart/form-data"
 ```
 
-### 多文件
+## 接收多文件
 
 再看一个处理多文件的示例：
 
@@ -389,7 +389,7 @@ curl -X POST http://localhost:8080/upload \
   -H "Content-Type: multipart/form-data"
 ```
 
-### 限制大小
+## 限制文件大小
 
 会稍微复杂一点，但是阅读完前面章节的内容之后，这里的示例应该不是问题：
 
