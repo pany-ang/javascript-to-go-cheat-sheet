@@ -391,4 +391,53 @@ curl -X POST http://localhost:8080/upload \
 
 ### 限制大小
 
+会稍微复杂一点，但是阅读完前面章节的内容之后，这里的示例应该不是问题：
+
+```go
+const (
+	MaxUploadSize = 1 << 20 // 1 MiB
+)
+
+func uploadHandler(c *gin.Context) {
+	// 使用 http.MaxBytesReader 封装 c.Request.Body，使其仅允许读取 MaxUploadSize 字节的数据
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxUploadSize)
+    // c.Request.ParseMultipartForm 触发读取
+	if err := c.Request.ParseMultipartForm(MaxUploadSize); err != nil {
+        // 检查 *http.MaxBytesError
+		if _, ok := err.(*http.MaxBytesError); ok {
+            // 返回 413 状态码
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{
+				"error": fmt.Sprintf("文件超过最大 %d bytes 限制", MaxUploadSize),
+			})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	defer file.Close()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "上传成功",
+	})
+}
+
+func main() {
+	router := gin.Default()
+	router.POST("/upload", uploadHandler)
+	router.Run()
+}
+```
+
+# 03
+
 **作者正在努力更新...**
