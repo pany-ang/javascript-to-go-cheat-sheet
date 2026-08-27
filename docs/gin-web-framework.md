@@ -440,4 +440,82 @@ func main() {
 
 # 03
 
+## 路由分组
+
+使用 `router.Group()` 可以设置公共路径前缀、进行 API 版本管理，将相关的处理函数放到一起：
+
+```go
+func loginEndpoint(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"action": "login"})
+}
+
+func captchaEndpoint(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"action": "captcha"})
+}
+
+func main() {
+	router := gin.Default()
+
+	api := router.Group("/api") // 公共路径前缀
+	{
+		v1 := api.Group("/v1") // 版本管理: v1 版本
+		{
+			auth := v1.Group("/auth") // 认证相关接口
+			{
+				auth.POST("/login", loginEndpoint)    // /api/v1/auth/login
+				auth.GET("/captcha", captchaEndpoint) // /api/v1/auth/captcha
+			}
+		}
+		v2 := api.Group("/v2") // 版本管理: v2 版本
+		{
+			auth := v2.Group("/auth") // 认证相关接口
+			{
+				auth.POST("/login", loginEndpoint)    // /api/v2/auth/login
+				auth.GET("/captcha", captchaEndpoint) // /api/v2/auth/captcha
+			}
+		}
+	}
+
+	router.Run()
+}
+```
+
+还可以让整个组**共享中间件**：
+
+```go
+// 写一个认证中间件
+func AuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// TODO 认证逻辑
+		c.Next()
+	}
+}
+
+func main() {
+	router := gin.Default()
+
+	// 不需要认证的组
+	public := router.Group("/api")
+	{
+		public.POST("/captcha", func(c *gin.Context) {
+			// TODO
+		})
+	}
+
+	// 需要认证的组
+	private := router.Group("/api", AuthRequired()) // 也可以调用 private.Use(AuthRequired()) 来添加中间件
+	{
+		private.GET("/profile", func(c *gin.Context) {
+			// TODO
+		})
+	}
+
+	router.Run()
+}
+```
+
+这样，添加了中间件的 `Group` 里面的所有接口都会先执行中间件，再执行处理函数。
+
+## 重定向
+
 **作者正在努力更新...**
