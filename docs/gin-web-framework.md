@@ -293,8 +293,6 @@ Gin 接收文件需要用到前面 **Form 参数**章节提到的 `multipart/for
 先看一个处理单文件的示例：
 
 ```go
-package main
-
 import (
 	"log"
 	"net/http"
@@ -517,5 +515,69 @@ func main() {
 这样，添加了中间件的 `Group` 里面的所有接口都会先执行中间件，再执行处理函数。
 
 ## 重定向
+
+还是得稍微回忆一下 HTTP 状态码中与重定向相关的：
+
+- `301`：永久重定向，资源已永久移动，浏览器和搜索引擎会更新它们的缓存。对应常量为 `http.StatusMovedPermanently`
+- `302`：临时重定向，资源被临时改变了位置，浏览器会跟随但不会缓存新 URL。对应常量为 `http.StatusFound`
+- `307`：临时重定向，与 302 区别是浏览器必须保留原始 HTTP 方法。对应常量为 `http.StatusTemporaryRedirect`
+- `308`：永久重定向，与 301 区别是浏览器必须保留原始 HTTP 方法。对应常量为 `http.StatusPermanentRedirect`
+
+其中 301 和 302 不可靠，遇见非 GET 请求时可能被浏览器改写成 GET 请求。所以当请求是 POST 时优先考虑 307 和 308 状态码。
+
+### HTTP 重定向
+
+服务端返回 3xx 状态码 + location，浏览器自动再发一次请求（有网络往返）。使用 `c.Redirect(code, location)` 方法来完成。
+
+```go
+import (
+	"io"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	router := gin.Default()
+
+	// 跨站重定向
+	router.GET("/baidu", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "https://www.baidu.com/")
+	})
+
+	// 接口版本迁移
+	router.POST("/api/v1/captcha", func(c *gin.Context) {
+		c.Redirect(http.StatusTemporaryRedirect, "/api/v2/captcha")
+	})
+
+	router.POST("/api/v2/captcha", func(c *gin.Context) {
+        body, _ := io.ReadAll(c.Request.Body)
+		c.JSON(http.StatusOK, gin.H{"version": "v2", "body": string(body)})
+	})
+
+	router.Run()
+}
+```
+
+### 路由重定向
+
+也叫服务器内部转发，同一次请求内改写 Path 后重新走一遍路由树（无网络往返，浏览器感知不到）。使用 `router.HandleContext(c)` 方法来完成。
+
+```go
+func main() {
+	router := gin.Default()
+
+	router.GET("/api/v1/captcha", func(c *gin.Context) {
+		c.Request.URL.Path = "/api/v2/captcha"
+		router.HandleContext(c)
+	})
+
+	router.GET("/api/v2/captcha", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"version": "v2"})
+	})
+
+	router.Run()
+}
+```
 
 **作者正在努力更新...**
