@@ -580,4 +580,78 @@ func main() {
 }
 ```
 
+## 响应格式
+
+让每个接口的响应格式保持一致能让前端处理接口返回的数据时更加方便。
+
+```go
+// 统一的响应风格
+type Response struct {
+	Code    int    `json:"code"`
+	Data    any    `json:"data,omitempty"`
+	Message string `json:"message"`
+}
+
+// 业务状态码
+const (
+	CodeOK           = 0    // 成功
+	CodeUserNotFound = 1001 // 用户不存在
+)
+
+// 返回成功响应
+func OK(c *gin.Context, data any) {
+	c.JSON(http.StatusOK, Response{
+		Code:    CodeOK,
+		Data:    data,
+		Message: "success",
+	})
+}
+
+// 返回错误响应，HTTP 状态码和业务状态码分别指定
+func Fail(c *gin.Context, status int, code int, message string) {
+	c.JSON(status, Response{
+		Code:    code,
+		Data:    nil,
+		Message: message,
+	})
+}
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/api/users/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		// 模拟查找
+		if id == "0" {
+			Fail(c, http.StatusNotFound, CodeUserNotFound, "用户不存在")
+			return
+		}
+		OK(c, gin.H{"id": id, "name": "pany"})
+	})
+
+	r.Run()
+}
+```
+
+请求成功很好理解，HTTP 状态码为 `200`，业务状态码也为对应的成功码。请求错误则分为两种情况，一种是 HTTP 状态码不为 `200`，另一种是业务状态码为错误码。
+
+所以接口在处理业务状态码为错误码的时候，一般有两种流派：
+
+- 统一返回 HTTP 状态码 `200`，业务状态码为错误码
+- 返回合适的 HTTP 错误码，业务状态码为具体的错误码
+
+上面给出的示例就对应着第二种流派，也是 Gin 官方文档中推荐的流派。但是开源社区里国内的项目大多采用第一种流派。属于是各有优劣，大家知晓即可。
+
+还需要留意的是上面出现了**结构体标签**语法，是我们之前没有讲到的：
+
+```go
+type Response struct {
+	Code    int    `json:"code"`
+	Data    any    `json:"data,omitempty"`
+	Message string `json:"message"`
+}
+```
+
+`json:"code"` 是 Go 的结构体标签，写在字段后面的反引号字符串里，用来告诉 `encoding/json` 这个字段在 JSON 里叫什么名字。而 `omitempty` 表示字段可以不存在。
+
 **作者正在努力更新...**
