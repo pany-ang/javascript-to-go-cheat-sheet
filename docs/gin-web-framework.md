@@ -478,6 +478,8 @@ func main() {
 }
 ```
 
+## 共享中间件
+
 还可以让整个组**共享中间件**：
 
 ```go
@@ -513,6 +515,8 @@ func main() {
 ```
 
 这样，添加了中间件的 `Group` 里面的所有接口都会先执行中间件，再执行处理函数。
+
+本小节只简单介绍了如何定义与使用中间件，不会详细介绍中间件知识，后续章节才会有专门的介绍。
 
 ## 重定向
 
@@ -580,7 +584,7 @@ func main() {
 }
 ```
 
-## 响应格式
+## 统一响应格式
 
 让每个接口的响应格式保持一致能让前端处理接口返回的数据时更加方便。
 
@@ -617,9 +621,9 @@ func Fail(c *gin.Context, status int, code int, message string) {
 }
 
 func main() {
-	r := gin.Default()
+	router := gin.Default()
 
-	r.GET("/api/users/:id", func(c *gin.Context) {
+	router.GET("/api/users/:id", func(c *gin.Context) {
 		id := c.Param("id")
 		// 模拟查找
 		if id == "0" {
@@ -629,7 +633,7 @@ func main() {
 		OK(c, gin.H{"id": id, "name": "pany"})
 	})
 
-	r.Run()
+	router.Run()
 }
 ```
 
@@ -653,5 +657,106 @@ type Response struct {
 ```
 
 `json:"code"` 是 Go 的结构体标签，写在字段后面的反引号字符串里，用来告诉 `encoding/json` 这个字段在 JSON 里叫什么名字。而 `omitempty` 表示字段可以不存在。
+
+## 统一错误处理
+
+错误处理方案有许多，但是万变不离其中。
+
+为错误定义一个结构体类型，将需要使用到的错误声明在顶层，最后在中间件中统一处理返回错误响应：
+
+```go
+package main
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+// 统一的响应风格
+type Response struct {
+	Code    int    `json:"code"`
+	Data    any    `json:"data,omitempty"`
+	Message string `json:"message"`
+}
+
+// 业务状态码
+const (
+	CodeOK   = 0
+	CodeFail = 1
+)
+
+// AppError 表示一个结构化的 API 错误
+type AppError struct {
+	Status  int
+	Code    int
+	Message string
+}
+
+// Error 让 AppError 实现 Go 内置的 error 接口（否则 c.Error() 无法传入 AppError）
+func (e *AppError) Error() string {
+	return e.Message
+}
+
+// 错误种类
+var (
+	ErrNotFound       = &AppError{Status: http.StatusNotFound, Code: CodeFail, Message: "资源未找到"}
+	ErrInternalServer = &AppError{Status: http.StatusInternalServerError, Code: CodeFail, Message: "发生意外错误"}
+)
+
+// 返回成功响应
+func OK(c *gin.Context, data any) {
+	c.JSON(http.StatusOK, Response{
+		Code:    CodeOK,
+		Data:    data,
+		Message: "success",
+	})
+}
+
+// 返回错误响应，HTTP 状态码和业务状态码分别指定
+func Fail(c *gin.Context, err *AppError) {
+	c.JSON(err.Status, Response{
+		Code:    err.Code,
+		Data:    nil,
+		Message: err.Message,
+	})
+}
+
+// ErrorHandler 是一个中间件，用于捕获通过 c.Error() 设置的错误
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+
+		if len(c.Errors) == 0 {
+			return
+		}
+
+		err := c.Errors.Last().Err
+		var appErr *AppError
+		if errors.As(err, &appErr) {
+			Fail(c, appErr)
+		} else {
+			Fail(c, ErrInternalServer)
+		}
+	}
+}
+
+func main() {
+	router := gin.Default()
+	router.Use(ErrorHandler())
+
+	router.GET("/api/items/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		if id == "0" {
+			_ = c.Error(ErrNotFound)
+			return
+		}
+		OK(c, gin.H{"id": id, "name": "pany"})
+	})
+
+	router.Run()
+}
+```
 
 **作者正在努力更新...**
